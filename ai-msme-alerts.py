@@ -81,10 +81,10 @@ vendors = [6078383921]
 
 def send_alert(chat_id, risk_level):
     messages = {
-        0: "✅ SAFE: No immediate landslide risk. Continue normal operations.",
-        1: "⚠️ MODERATE: Be cautious. Move essential goods to safer place.",
-        2: "🚨 HIGH: Landslide risk likely. Secure your stock and avoid travel.",
-        3: "🛑 SEVERE: Evacuate immediately! Landslide danger in your area."
+        0: " SAFE: No immediate landslide risk. Continue normal operations.",
+        1: " MODERATE: Be cautious. Move essential goods to safer place.",
+        2: " HIGH: Landslide risk likely. Secure your stock and avoid travel.",
+        3: " SEVERE: Evacuate immediately! Landslide danger in your area."
     }
     resp = requests.post(BASE_URL, data={"chat_id": chat_id, "text": messages[risk_level]})
     print("Status:", resp.status_code, "Response:", resp.json())
@@ -93,4 +93,5 @@ latest_risk = y_pred_classes[-1]
 for vendor in vendors:
     send_alert(vendor, latest_risk)
 
-print("✅ Alerts sent to MSME vendors via Telegram")
+print(" Alerts sent to MSME vendors via Telegram")
+
