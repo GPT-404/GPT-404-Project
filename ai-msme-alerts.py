@@ -1,5 +1,6 @@
-!pip install prophet lightgbm scikit-learn matplotlib seaborn requests
+!pip install prophet lightgbm scikit-learn matplotlib seaborn requests python-dotenv
 
+import os
 import pandas as pd
 import numpy as np
 from prophet import Prophet
@@ -7,6 +8,12 @@ import lightgbm as lgb
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+VENDORS = [int(x) for x in os.getenv("VENDOR_IDS", "").split(",")]
+BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
 dates = pd.date_range(start="2023-01-01", periods=1000, freq="H")
 rainfall = np.random.gamma(2, 2, size=len(dates))
@@ -75,23 +82,20 @@ unique_labels = np.unique(y_test)
 filtered_target_names = [name for i, name in enumerate(["Low", "Moderate", "High", "Severe"]) if i in unique_labels]
 print(classification_report(y_test, y_pred_classes, target_names=filtered_target_names, labels=unique_labels))
 
-TOKEN = "8391887536:AAFiXDolXGnUfuJc1yepuWqn9vXg0eFE7tI"
-BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-vendors = [6078383921]
-
 def send_alert(chat_id, risk_level):
     messages = {
-        0: " SAFE: No immediate landslide risk. Continue normal operations.",
-        1: " MODERATE: Be cautious. Move essential goods to safer place.",
-        2: " HIGH: Landslide risk likely. Secure your stock and avoid travel.",
-        3: " SEVERE: Evacuate immediately! Landslide danger in your area."
+        0: "SAFE: No immediate landslide risk. Continue normal operations.",
+        1: "MODERATE: Be cautious. Move essential goods to safer place.",
+        2: "HIGH: Landslide risk likely. Secure your stock and avoid travel.",
+        3: "SEVERE: Evacuate immediately! Landslide danger in your area."
     }
     resp = requests.post(BASE_URL, data={"chat_id": chat_id, "text": messages[risk_level]})
     print("Status:", resp.status_code, "Response:", resp.json())
 
-latest_risk = y_pred_classes[-1]
-for vendor in vendors:
-    send_alert(vendor, latest_risk)
-
-print(" Alerts sent to MSME vendors via Telegram")
-
+if VENDORS:
+    latest_risk = y_pred_classes[-1]
+    for vendor in VENDORS:
+        send_alert(vendor, latest_risk)
+    print("Alerts sent to MSME vendors via Telegram")
+else:
+    print("No vendor chat IDs found. Skipping Telegram alerts")
